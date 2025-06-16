@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Compact Calculator</title>
+  <style>
+    :root {
+      --bg: #1e1e1e;
+      --text: #fff;
+      --btn: #333;
+      --btn-hover: #555;
+      --accent: #0f0;
+    }
+    body.light-mode {
+      --bg: #f0f0f0;
+      --text: #000;
+      --btn: #ccc;
+      --btn-hover: #aaa;
+      --accent: #090;
+    }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: sans-serif;
+      margin: 0;
+      padding: 20px;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+    }
+    .container {
+      display: flex;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+    .calculator {
+      background: var(--btn);
+      padding: 15px;
+      border-radius: 10px;
+      width: 480px;
+    }
+    .controls {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 8px;
+    }
+    .toggle {
+      padding: 6px 10px;
+      font-size: 14px;
+      border: 1px solid var(--text);
+      background: none;
+      color: var(--text);
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    #display {
+      width: 100%;
+      padding: 10px;
+      font-size: 18px;
+      margin-bottom: 8px;
+      border: none;
+      border-radius: 5px;
+      background: #000;
+      color: var(--accent);
+    }
+    .top-buttons {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 8px;
+    }
+    .top-buttons button {
+      flex: 1;
+      margin-right: 8px;
+    }
+    .top-buttons button:last-child {
+      margin-right: 0;
+    }
+    .number-operator {
+      display: flex;
+    }
+    .numbers {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      width: 280px;
+    }
+    .operators {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-left: 8px;
+    }
+    .functions {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin-top: 10px;
+    }
+    button {
+      background: var(--btn);
+      color: var(--text);
+      border: none;
+      border-radius: 6px;
+      padding: 10px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+    button:hover {
+      background: var(--btn-hover);
+    }
+    .sidebar {
+      width: 200px;
+      background: var(--btn);
+      border-radius: 10px;
+      padding: 10px;
+    }
+    .history-header {
+      display: flex;
+      align-items: center;
+      cursor: pointer;
+      margin-bottom: 8px;
+    }
+    .history-header span {
+      transition: transform 0.3s;
+    }
+    .sidebar.collapsed .history-header span {
+      transform: rotate(-90deg);
+    }
+    .history-list {
+      max-height: 300px;
+      overflow-y: auto;
+      font-size: 14px;
+    }
+    .history-item {
+      border-bottom: 1px solid #666;
+      margin-bottom: 5px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="calculator">
+      <div class="controls">
+        <button class="toggle" onclick="toggleTheme()">🌗 Theme</button>
+        <button class="toggle" onclick="toggleAngle()">Mode: <span id="angleLabel">Degrees</span></button>
+      </div>
+      <input id="display" readonly />
+      <div class="top-buttons">
+        <button onclick="clearDisplay()">C</button>
+        <button onclick="deleteLast()">⌫</button>
+      </div>
+      <div class="number-operator">
+        <div class="numbers">
+          <button onclick="append('7')">7</button>
+          <button onclick="append('8')">8</button>
+          <button onclick="append('9')">9</button>
+          <button onclick="append('4')">4</button>
+          <button onclick="append('5')">5</button>
+          <button onclick="append('6')">6</button>
+          <button onclick="append('1')">1</button>
+          <button onclick="append('2')">2</button>
+          <button onclick="append('3')">3</button>
+          <button onclick="append('0')">0</button>
+          <button onclick="append('.')">.</button>
+          <button onclick="calculate()">=</button>
+        </div>
+        <div class="operators">
+          <button onclick="append('+')">+</button>
+          <button onclick="append('-')">−</button>
+          <button onclick="append('*')">×</button>
+          <button onclick="append('/')">÷</button>
+        </div>
+      </div>
+      <div class="functions">
+        <button onclick="appendTrig('sin')">sin</button>
+        <button onclick="appendTrig('cos')">cos</button>
+        <button onclick="appendTrig('tan')">tan</button>
+        <button onclick="append('Math.log10(')">log</button>
+        <button onclick="append('Math.log(')">ln</button>
+        <button onclick="append('Math.sqrt(')">√</button>
+        <button onclick="append('Math.PI')">π</button>
+        <button onclick="append('Math.E')">e</button>
+        <button onclick="append('(')">(</button>
+        <button onclick="append(')')">)</button>
+        <button onclick="append('fact(')">x!</button>
+      </div>
+    </div>
+
+    <div class="sidebar" id="historyPanel">
+      <div class="history-header" onclick="toggleHistory()">
+        <span id="arrow">▼</span>
+        <strong>History</strong>
+      </div>
+      <div class="history-list" id="historyList"></div>
+    </div>
+  </div>
+
+  <script>
+    const display = document.getElementById("display");
+    const historyList = document.getElementById("historyList");
+    const historyPanel = document.getElementById("historyPanel");
+    const angleLabel = document.getElementById("angleLabel");
+    const arrow = document.getElementById("arrow");
+    let angleMode = "deg";
+    let history = [];
+
+    function append(value) {
+      display.value += value;
+    }
+
+    function appendTrig(func) {
+      if (angleMode === "deg") {
+        append(`Math.${func}(Math.PI/180*`);
+      } else {
+        append(`Math.${func}(`);
+      }
+    }
+
+    function clearDisplay() {
+      display.value = "";
+    }
+
+    function deleteLast() {
+      display.value = display.value.slice(0, -1);
+    }
+
+    function calculate() {
+      try {
+        let expr = display.value.replace(/(\d+)!/g, 'fact($1)');
+        let result = Function('"use strict";return (' + expr + ')')();
+        display.value = result;
+        history.unshift(expr + " = " + result);
+        renderHistory();
+      } catch {
+        display.value = "Error";
+      }
+    }
+
+    function fact(n) {
+      if (n < 0) return NaN;
+      let res = 1;
+      for (let i = 2; i <= n; i++) res *= i;
+      return res;
+    }
+
+    function renderHistory() {
+      historyList.innerHTML = history.slice(0, 50).map(h => `<div class="history-item">${h}</div>`).join('');
+    }
+
+    function toggleTheme() {
+      document.body.classList.toggle("light-mode");
+    }
+
+    function toggleAngle() {
+      angleMode = angleMode === "deg" ? "rad" : "deg";
+      angleLabel.textContent = angleMode === "deg" ? "Degrees" : "Radians";
+    }
+
+    function toggleHistory() {
+      historyPanel.classList.toggle("collapsed");
+    }
+
+    document.addEventListener("keydown", e => {
+      if (e.key >= '0' && e.key <= '9') append(e.key);
+      else if ("+-*/().".includes(e.key)) append(e.key);
+      else if (e.key === "Enter") calculate();
+      else if (e.key === "Backspace") deleteLast();
+      else if (e.key.toLowerCase() === "c") clearDisplay();
+    });
+  </script>
+</body>
+</html>
