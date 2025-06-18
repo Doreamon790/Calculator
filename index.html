@@ -171,6 +171,7 @@
           <button onclick="append('*')">×</button>
           <button onclick="append('/')">÷</button>
         </div>
+      </div>
       <div class="functions">
         <button onclick="appendTrig('sin')">sin</button>
         <button onclick="appendTrig('cos')">cos</button>
@@ -183,14 +184,19 @@
         <button onclick="append('(')">(</button>
         <button onclick="append(')')">)</button>
         <button onclick="append('fact(')">x!</button>
-      </div>                                                                                                    
-   <div class="sidebar" id="historyPanel">
-  <div class="history-header" onclick="toggleHistory()">
-    <span id="arrow">▼</span>
-    <strong>History</strong>
+      </div>
+    </div>
+
+    <div class="sidebar" id="historyPanel">
+      <div class="history-header" onclick="toggleHistory()">
+        <span id="arrow">▼</span>
+        <strong>History</strong>
+      </div>
+      <div class="history-list" id="historyList"></div>
+    </div>
   </div>
-  <div class="history-list" id="historyList"></div>
-  </div>
+
+  <script>
     const display = document.getElementById("display");
     const historyList = document.getElementById("historyList");
     const historyPanel = document.getElementById("historyPanel");
